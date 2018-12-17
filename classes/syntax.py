@@ -1,3 +1,4 @@
+from pprint import pprint
 from classes.lexic import Token
 
 
@@ -12,10 +13,18 @@ class Syntaxer():
         self.current_lexem = lexem[0]
         self.current_lexem_index = 0
 
+    def run(self):
+
+        try:
+            self.statement()
+        except Exception as e:
+            pprint(e)
+            pprint('Expression is invalid')
+
     def set_next_lexem(self):
 
         if (self.current_lexem_index + 1) == len(self.lexem):
-            pass
+            raise Exception('Statement ended')
 
         self.current_lexem_index += 1
         self.current_lexem = self.lexem[self.current_lexem_index]
@@ -23,15 +32,70 @@ class Syntaxer():
     def statement(self):
 
         if self.current_lexem.type == Token.Keyword and self.current_lexem.value == 'if':
+            self.set_next_lexem()
             self.condition()
 
-            self.set_next_lexem()
-
-            if self.current_lexem.type == Token.Keyword and self.current_lexem == 'then':
+            if self.current_lexem.type == Token.Keyword and self.current_lexem.value == 'then':
+                self.set_next_lexem()
                 self.state()
+            else:
+                raise Exception('No then keyword')
+        else:
+            raise Exception('No if keyword')
 
     def condition(self):
+        self.log_exp()
+        self.set_next_lexem()
+
+        while True:
+            if self.current_lexem.type == Token.LogicalOperation:
+                self.set_next_lexem()
+                self.log_exp()
+                self.set_next_lexem()
+            else:
+                break
+
+        pass
+
+    def log_exp(self):
+        if self.current_lexem.type != Token.Delimiter or self.current_lexem.value != '(':
+            raise Exception(' Logical expression is not wrapped in round brackets ')
+
+        self.set_next_lexem()
+        self.operand()
+        self.set_next_lexem()
+        self.comparison()
+        self.set_next_lexem()
+        self.operand()
+        self.set_next_lexem()
+
+        if self.current_lexem.type != Token.Delimiter or self.current_lexem.value != ')':
+            raise Exception(' Logical expression is not wrapped in round brackets ')
+
+    def operand(self):
+        if self.current_lexem.type not in [Token.Integer, Token.Identifier, Token.Literal]:
+            raise Exception('Not operand')
+
+    def comparison(self):
+        if self.current_lexem.type != Token.ComparisonOperator:
+            raise Exception('Not comparison operator')
         pass
 
     def state(self):
-        pass
+        if self.current_lexem.type != Token.Identifier:
+            raise Exception('Not identifier')
+
+        self.set_next_lexem()
+
+        if self.current_lexem.value != ':=':
+            raise Exception('Not assignment')
+
+        self.set_next_lexem()
+
+        if self.current_lexem.type != Token.Literal:
+            raise Exception('Not literal')
+
+        self.set_next_lexem()
+
+        if self.current_lexem.value != ';':
+            raise Exception('Not colon')

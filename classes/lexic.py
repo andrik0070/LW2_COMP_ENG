@@ -12,10 +12,14 @@ class Token(object):
     operator = 'OP'
     block_start = 'START'
     block_end = 'END'
+    LogicalOperation = 'LogicalOperation'
+    ComparisonOperator = 'ComparisonOperator'
+
+    logical_operations = ['and', 'or']
 
     keywords = ['procedure', 'var', 'Integer', 'TDrawBuffer', 'Begin', 'if', 'and', 'then', 'End']
 
-    def __init__(self, type, value, line, line_no, line_pos):
+    def __init__(self, type, value, line=0, line_no=0, line_pos=0):
         self.type = type
         self.value = value
         self.line = line
