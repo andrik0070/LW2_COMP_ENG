@@ -1,0 +1,2 @@
+if(Status=csError) and (Key<>'C') or (j>=8) then
+string:='gfgdfgdgd';

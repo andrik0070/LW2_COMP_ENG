@@ -1,5 +1,6 @@
 from pprint import pprint
 from classes.lexic import Token
+from classes.exceptions import SyntaxError
 
 
 class Syntaxer():
@@ -14,12 +15,7 @@ class Syntaxer():
         self.current_lexem_index = 0
 
     def run(self):
-
-        try:
             self.statement()
-        except Exception as e:
-            pprint(e)
-            pprint('Expression is invalid')
 
     def set_next_lexem(self):
 
@@ -39,27 +35,24 @@ class Syntaxer():
                 self.set_next_lexem()
                 self.state()
             else:
-                raise Exception('No then keyword')
+                raise SyntaxError(self.current_lexem)
         else:
-            raise Exception('No if keyword')
+            raise SyntaxError(self.current_lexem)
 
     def condition(self):
         self.log_exp()
         self.set_next_lexem()
 
-        while True:
-            if self.current_lexem.type == Token.LogicalOperation:
+        while self.current_lexem.type == Token.LogicalOperation:
                 self.set_next_lexem()
                 self.log_exp()
                 self.set_next_lexem()
-            else:
-                break
 
         pass
 
     def log_exp(self):
         if self.current_lexem.type != Token.Delimiter or self.current_lexem.value != '(':
-            raise Exception(' Logical expression is not wrapped in round brackets ')
+            raise SyntaxError(self.current_lexem)
 
         self.set_next_lexem()
         self.operand()
@@ -70,32 +63,32 @@ class Syntaxer():
         self.set_next_lexem()
 
         if self.current_lexem.type != Token.Delimiter or self.current_lexem.value != ')':
-            raise Exception(' Logical expression is not wrapped in round brackets ')
+            raise SyntaxError(self.current_lexem)
 
     def operand(self):
         if self.current_lexem.type not in [Token.Integer, Token.Identifier, Token.Literal]:
-            raise Exception('Not operand')
+            raise SyntaxError(self.current_lexem)
 
     def comparison(self):
         if self.current_lexem.type != Token.ComparisonOperator:
-            raise Exception('Not comparison operator')
+            raise SyntaxError(self.current_lexem)
         pass
 
     def state(self):
         if self.current_lexem.type != Token.Identifier:
-            raise Exception('Not identifier')
+            raise SyntaxError(self.current_lexem)
 
         self.set_next_lexem()
 
         if self.current_lexem.value != ':=':
-            raise Exception('Not assignment')
+            raise SyntaxError(self.current_lexem)
 
         self.set_next_lexem()
 
         if self.current_lexem.type != Token.Literal:
-            raise Exception('Not literal')
+            raise SyntaxError(self.current_lexem)
 
         self.set_next_lexem()
 
         if self.current_lexem.value != ';':
-            raise Exception('Not colon')
+            raise SyntaxError(self.current_lexem)

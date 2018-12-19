@@ -15,9 +15,10 @@ class Token(object):
     LogicalOperation = 'LogicalOperation'
     ComparisonOperator = 'ComparisonOperator'
 
-    logical_operations = ['and', 'or']
+    logical_operators = ['and', 'or']
+    comparison_operators = ['=', '<=', '>=', '<>']
 
-    keywords = ['procedure', 'var', 'Integer', 'TDrawBuffer', 'Begin', 'if', 'and', 'then', 'End']
+    keywords = ['procedure', 'var', 'Integer', 'TDrawBuffer', 'Begin', 'if', 'and', 'or', 'then', 'End']
 
     def __init__(self, type, value, line=0, line_no=0, line_pos=0):
         self.type = type
@@ -90,9 +91,12 @@ class Lexer(object):
                 if self.char not in (self.delimiters + [' ', Lexer.newline, Lexer.eof_marker]):
                     self.unrecognized_lexem()
                 else:
-                    token = Token(Token.Identifier, self.match, self.lines[self.line_no], self.line_no, self.line_pos)
+                    token = Token(Token.Identifier, self.match, self.lines[self.line_no], self.line_no,
+                                  self.line_pos)
 
-                    if self.match in Token.keywords:
+                    if self.match in Token.logical_operators:
+                        token.type = Token.LogicalOperation
+                    elif self.match in Token.keywords:
                         token.type = Token.Keyword
 
                     self.tokens.append(token)
@@ -116,8 +120,9 @@ class Lexer(object):
                 while self.char != "'":
                     self.match += self.char
                     self.char = self.get_next_char()
+
                 self.match += self.char
-                self.tokens.append(Token(Token.Literal, self.match + self.char, self.lines[self.line_no], self.line_no,
+                self.tokens.append(Token(Token.Literal, self.match, self.lines[self.line_no], self.line_no,
                                          self.line_pos))
                 self.char = self.get_next_char()
 
@@ -125,13 +130,24 @@ class Lexer(object):
                 self.match = self.char
                 self.char = self.get_next_char()
 
-                if (self.match + self.char) in self.double_delimiter:
+                if (self.match + self.char) in Token.comparison_operators:
+                    token = Token(Token.ComparisonOperator, self.match + self.char, self.lines[self.line_no],
+                                  self.line_no,
+                                  self.line_pos)
+                    self.char = self.get_next_char()
+
+                elif (self.match + self.char) in self.double_delimiter:
                     token = Token(Token.DoubleDelimiter, self.match + self.char, self.lines[self.line_no], self.line_no,
                                   self.line_pos)
                     self.char = self.get_next_char()
                 else:
-                    token = Token(Token.Delimiter, self.match, self.lines[self.line_no], self.line_no,
-                                  self.line_pos)
+                    if self.match in Token.comparison_operators:
+                        token = Token(Token.ComparisonOperator, self.match, self.lines[self.line_no], self.line_no,
+                                      self.line_pos)
+                    else:
+                        token = Token(Token.Delimiter, self.match, self.lines[self.line_no], self.line_no,
+                                      self.line_pos)
+
                 self.tokens.append(token)
 
             else:
